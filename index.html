@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>V-STAR Project & Activity Board</title>
+  <!-- โหลด Tailwind CSS และ Supabase -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style> body { font-family: 'Kanit', sans-serif; } </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+  <!-- แถบเมนูด้านบน -->
+  <header class="bg-[#ef4444] text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center flex-wrap gap-2">
+      <div class="text-2xl font-black italic tracking-wider bg-white text-red-600 px-2 py-0.5 rounded cursor-pointer" onclick="switchTab('activities')">
+        V STAR
+      </div>
+      <div class="flex space-x-2 text-sm flex-wrap">
+        <button onclick="switchTab('activities')" class="px-3 py-1.5 rounded hover:bg-red-600 font-medium">กิจกรรม</button>
+        <button onclick="switchTab('add-activity')" class="px-3 py-1.5 bg-yellow-500 text-yellow-900 rounded hover:bg-yellow-400 font-bold">+ สร้างกิจกรรม</button>
+        <button onclick="switchTab('admin')" class="px-3 py-1.5 bg-red-800 rounded hover:bg-red-900 font-medium">หลังบ้าน</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- พื้นที่แสดงเนื้อหาหลัก -->
+  <main class="max-w-4xl mx-auto w-full flex-grow p-4">
+
+    <!-- 1. หน้ากิจกรรมทั้งหมด -->
+    <section id="sec-activities" class="space-y-6">
+      <h1 class="text-xl font-bold text-gray-800 border-b pb-2">☑ กิจกรรมทั้งหมด</h1>
+      <div id="activity-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <p class="text-gray-500 text-center col-span-full py-4">กำลังโหลดข้อมูล...</p>
+      </div>
+    </section>
+
+    <!-- 2. หน้าสร้างกิจกรรมใหม่ -->
+    <section id="sec-add-activity" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow border p-6">
+        <h2 class="text-lg font-bold text-gray-700 border-b pb-3 mb-4">📢 สร้างกิจกรรมใหม่</h2>
+        <form id="activityForm" onsubmit="handleAddActivity(event)" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium">ชื่อกิจกรรมหลัก *</label>
+            <input type="text" id="act-title" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-red-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium">วันที่จัดกิจกรรม</label>
+            <input type="text" id="act-date" placeholder="เช่น 12 - 16 ต.ค. 69" class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-red-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium">สถานที่</label>
+            <input type="text" id="act-location" class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-red-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium">URL รูปภาพหน้าปก (ใส่ลิงก์รูปภาพ)</label>
+            <input type="url" id="act-image" placeholder="https://..." class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-red-500">
+          </div>
+          <button type="submit" class="w-full bg-yellow-500 text-yellow-900 font-bold py-3 rounded-lg hover:bg-yellow-400">
+            บันทึกกิจกรรม
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 3. หน้าฟอร์มสมัครกิจกรรม -->
+    <section id="sec-register" class="hidden space-y-4">
+      <div class="bg-white rounded-xl shadow border p-6">
+        <h2 class="text-lg font-bold text-gray-700 border-b pb-3 mb-4">👤 สมัครเข้าร่วมกิจกรรม</h2>
+        <form id="registerForm" onsubmit="handleRegister(event)" class="space-y-4">
+          <input type="hidden" id="reg-activity-id">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium">ชื่อ *</label>
+              <input type="text" id="reg-firstname" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-red-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium">นามสกุล *</label>
+              <input type="text" id="reg-lastname" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-red-500">
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium">เบอร์โทรศัพท์ *</label>
+            <input type="tel" id="reg-phone" required class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-red-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium">โรงเรียน/สถานศึกษา</label>
+            <input type="text" id="reg-school" class="w-full border rounded-lg p-2.5 outline-none focus:ring-2 focus:ring-red-500">
+          </div>
+          <button type="submit" class="w-full bg-red-500 text-white font-bold py-3 rounded-lg hover:bg-red-600">
+            ยืนยันการสมัคร
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 4. ระบบหลังบ้าน (Admin) -->
+    <section id="sec-admin" class="hidden space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow border flex justify-between items-center">
+        <h2 class="text-lg font-bold text-gray-800">ระบบหลังบ้าน (รายชื่อผู้สมัคร)</h2>
+        <div class="bg-red-100 text-red-700 font-bold px-4 py-2 rounded-lg text-sm">
+          รวม: <span id="applicant-count">0</span> คน
+        </div>
+      </div>
+      <div id="applicant-list" class="space-y-3">
+        <p class="text-gray-500 text-center py-4">กำลังโหลดข้อมูล...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // --- ตั้งค่า Supabase (อย่าลืมเปลี่ยนเป็นของคุณเอง) ---
+    const SUPABASE_URL = "https://YOUR_SUPABASE_PROJECT_ID.supabase.co";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ทำงานเมื่อโหลดหน้าเว็บเสร็จ
+    window.onload = () => {
+      loadActivities();
+    };
+
+    // ฟังก์ชันสลับหน้าจอ
+    function switchTab(tabName, activityId = null) {
+      document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById('sec-' + tabName).classList.remove('hidden');
+
+      if (tabName === 'activities') loadActivities();
+      if (tabName === 'admin') loadApplicants();
+      if (tabName === 'register' && activityId) {
+        document.getElementById('reg-activity-id').value = activityId;
+      }
+    }
+
+    // โหลดกิจกรรมจากฐานข้อมูล
+    async function loadActivities() {
+      try {
+        const { data, error } = await supabaseClient.from('activities').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+
+        const container = document.getElementById('activity-list');
+        container.innerHTML = '';
+        
+        if (data.length === 0) {
+          container.innerHTML = '<p class="text-gray-500 col-span-full">ยังไม่มีกิจกรรม</p>';
+          return;
+        }
+
+        data.forEach(act => {
+          const imgUrl = act.image_url || 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80';
+          container.innerHTML += `
+            <div class="bg-white rounded-xl shadow border overflow-hidden">
+              <img src="${imgUrl}" class="w-full h-48 object-cover" onerror="this.src='https://via.placeholder.com/800x400?text=No+Image'">
+              <div class="p-4 space-y-2">
+                <h2 class="text-lg font-bold text-blue-600">${act.title}</h2>
+                <div class="text-xs text-gray-600 space-y-1">
+                  <p>📅 ${act.event_date || 'ไม่ระบุวันที่'}</p>
+                  <p>📍 ${act.location || 'ไม่ระบุสถานที่'}</p>
+                </div>
+                <div class="pt-3 border-t">
+                  <button onclick="switchTab('register', '${act.id}')" class="w-full bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition">
+                    สมัครกิจกรรมนี้
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      } catch (err) {
+        console.error(err);
+        document.getElementById('activity-list').innerHTML = `<p class="text-red-500 col-span-full">เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล</p>`;
+      }
+    }
+
+    // บันทึกกิจกรรมใหม่
+    async function handleAddActivity(e) {
+      e.preventDefault();
+      const newAct = {
+        title: document.getElementById('act-title').value,
+        event_date: document.getElementById('act-date').value,
+        location: document.getElementById('act-location').value,
+        image_url: document.getElementById('act-image').value
+      };
+
+      try {
+        const { error } = await supabaseClient.from('activities').insert([newAct]);
+        if (error) throw error;
+        alert("สร้างกิจกรรมสำเร็จ!");
+        document.getElementById('activityForm').reset();
+        switchTab('activities');
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    }
+
+    // บันทึกการสมัครกิจกรรม
+    async function handleRegister(e) {
+      e.preventDefault();
+      const applicantData = {
+        first_name: document.getElementById('reg-firstname').value,
+        last_name: document.getElementById('reg-lastname').value,
+        phone: document.getElementById('reg-phone').value,
+        school: document.getElementById('reg-school').value,
+        prefix: 'คุณ', // ค่าเริ่มต้นกัน error
+      };
+
+      try {
+        const { error } = await supabaseClient.from('participants').insert([applicantData]);
+        if (error) throw error;
+        alert("สมัครกิจกรรมสำเร็จ!");
+        document.getElementById('registerForm').reset();
+        switchTab('activities');
+      } catch (err) {
+        alert("เกิดข้อผิดพลาดในการสมัคร: " + err.message);
+      }
+    }
+
+    // โหลดรายชื่อผู้สมัครหน้า Admin
+    async function loadApplicants() {
+      try {
+        const { data, error, count } = await supabaseClient.from('participants').select('*', { count: 'exact' }).order('created_at', { ascending: false });
+        if (error) throw error;
+
+        document.getElementById('applicant-count').innerText = count || data.length;
+        const container = document.getElementById('applicant-list');
+        container.innerHTML = '';
+
+        if (data.length === 0) {
+          container.innerHTML = '<p class="text-gray-500 bg-white p-4 rounded text-center">ยังไม่มีผู้สมัคร</p>';
+          return;
+        }
+
+        data.forEach(person => {
+          container.innerHTML += `
+            <div class="bg-white p-4 rounded-xl shadow-sm border flex justify-between items-center">
+              <div>
+                <p class="font-bold text-gray-800">${person.first_name} ${person.last_name}</p>
+                <p class="text-sm text-gray-500">📱 ${person.phone} | 🏫 ${person.school || '-'}</p>
+              </div>
+            </div>
+          `;
+        });
+      } catch (err) {
+        document.getElementById('applicant-list').innerHTML = `<p class="text-red-500">ดึงข้อมูลไม่สำเร็จ</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
